@@ -33,18 +33,19 @@ jobs:
           PROJECT_ROLE=$(yq e '.projectRole' manifests/user.yaml)
           PROJECT_ID=$(yq e '.projectId' manifests/user.yaml)
 
-          echo "username=$USERNAME"
-          echo "name=$NAME"
-          echo "password=$PASSWORD"
-          echo "enabled=$ENABLED"
-          echo "global_role=$GLOBAL_ROLE"
-          echo "project_role=$PROJECT_ROLE"
-          echo "project_id=$PROJECT_ID"
+          echo "username=$USERNAME" >> $GITHUB_OUTPUT
+          echo ${{ steps.read_user.outputs.username }}
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "password=$PASSWORD" >> $GITHUB_OUTPUT
+          echo "enabled=$ENABLED" >> $GITHUB_OUTPUT
+          echo "global_role=$GLOBAL_ROLE" >> $GITHUB_OUTPUT
+          echo "project_role=$PROJECT_ROLE" >> $GITHUB_OUTPUT
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
 
       - name: Create Rancher User
         id: create_user
         run: |
-          response=$(curl -s -k -X POST \
+          response=$(curl -v -s -k -X POST \
             -H "Authorization: Bearer $RANCHER_API_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{
@@ -56,7 +57,7 @@ jobs:
             $RANCHER_URL/v3/users)
 
           echo "$response"
-          user_id=$(echo "$response" | jq -r '.id')
+          user_id=$(echo "$response" | jq -r '.id') >> $GITHUB_OUTPUT
           echo "user_id=$user_id"
 
       - name: Create Global Role Binding
