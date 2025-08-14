@@ -25,6 +25,7 @@ jobs:
       - name: Verify Rancher Token
         run: |
           echo "Checking Rancher API authentication..."
+          echo "Token length: ${#RANCHER_API_TOKEN}"
           curl -s -k \
             -H "Authorization: Bearer ${RANCHER_API_TOKEN}" \
             -H "Accept: application/json" \
