@@ -1,5 +1,5 @@
-username: 'gha-user-4'
-name: 'GHA User 4'
+username: 'gha-user-2'
+name: 'GHA User 2'
 password: 'StrongPassword123!'
 enabled: true
 globalRole: user
