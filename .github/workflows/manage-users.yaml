@@ -34,7 +34,6 @@ jobs:
           PROJECT_ID=$(yq e '.projectId' manifests/user.yaml)
 
           echo "username=$USERNAME" >> $GITHUB_OUTPUT
-          echo ${{ steps.read_user.outputs.username }}
           echo "name=$NAME" >> $GITHUB_OUTPUT
           echo "password=$PASSWORD" >> $GITHUB_OUTPUT
           echo "enabled=$ENABLED" >> $GITHUB_OUTPUT
@@ -45,6 +44,8 @@ jobs:
       - name: Create Rancher User
         id: create_user
         run: |
+          echo "Username = ${{ steps.read_user.outputs.username }}"
+          echo "Name = ${{ steps.read_user.outputs.name }}"
           curl -s -k -X POST \
             -H "Authorization: Bearer '$RANCHER_API_TOKEN'" \
             -H 'Content-Type: application/json' \
@@ -55,4 +56,3 @@ jobs:
                   "enabled": ${{ steps.read_user.outputs.enabled }} 
                 }' \
             "$RANCHER_URL/v3/users"
-
