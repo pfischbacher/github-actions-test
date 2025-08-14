@@ -56,7 +56,8 @@ jobs:
             $RANCHER_URL/v3/users)
 
           echo "$response"
-          user_id=$(echo "$response" | jq -r '.id') >> $GITHUB_OUTPUT
+          user_id=$(echo "$response" | jq -r '.id')
+          echo "user_id=$user_id" >> $GITHUB_OUTPUT
 
       - name: Create Global Role Binding
         run: |
