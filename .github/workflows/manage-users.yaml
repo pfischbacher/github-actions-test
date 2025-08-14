@@ -18,8 +18,9 @@ jobs:
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
+        id: install
         with:
-          version: 'v1.31'
+          version: 'v1.31.9'
 
       - name: Apply Rancher user manifests
         run: |
