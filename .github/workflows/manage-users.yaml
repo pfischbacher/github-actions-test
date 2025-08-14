@@ -33,13 +33,13 @@ jobs:
           PROJECT_ROLE=$(yq e '.projectRole' manifests/user.yaml)
           PROJECT_ID=$(yq e '.projectId' manifests/user.yaml)
 
-          echo "username=$USERNAME" >> $GITHUB_OUTPUT
-          echo "name=$NAME" >> $GITHUB_OUTPUT
-          echo "password=$PASSWORD" >> $GITHUB_OUTPUT
-          echo "enabled=$ENABLED" >> $GITHUB_OUTPUT
-          echo "global_role=$GLOBAL_ROLE" >> $GITHUB_OUTPUT
-          echo "project_role=$PROJECT_ROLE" >> $GITHUB_OUTPUT
-          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+          echo "username=$USERNAME"
+          echo "name=$NAME"
+          echo "password=$PASSWORD"
+          echo "enabled=$ENABLED"
+          echo "global_role=$GLOBAL_ROLE"
+          echo "project_role=$PROJECT_ROLE"
+          echo "project_id=$PROJECT_ID"
 
       - name: Create Rancher User
         id: create_user
@@ -57,7 +57,7 @@ jobs:
 
           echo "$response"
           user_id=$(echo "$response" | jq -r '.id')
-          echo "user_id=$user_id" >> $GITHUB_OUTPUT
+          echo "user_id=$user_id"
 
       - name: Create Global Role Binding
         run: |
