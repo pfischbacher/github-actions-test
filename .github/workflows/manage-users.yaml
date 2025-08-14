@@ -45,44 +45,14 @@ jobs:
       - name: Create Rancher User
         id: create_user
         run: |
-          response=$(curl -v -s -k -X POST \
-            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{
-                  \"username\": \"${{ steps.read_user.outputs.username }}\",
-                  \"name\": \"${{ steps.read_user.outputs.name }}\",
-                  \"password\": \"${{ steps.read_user.outputs.password }}\",
-                  \"enabled\": ${{ steps.read_user.outputs.enabled }}
-                }" \
-            $RANCHER_URL/v3/users)
-
-          echo "$response"
-          user_id=$(echo "$response" | jq -r '.id') >> $GITHUB_OUTPUT
-          echo "user_id=$user_id"
-
-      - name: Create Global Role Binding
-        run: |
           curl -s -k -X POST \
             -H "Authorization: Bearer $RANCHER_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{
-                  \"type\": \"globalRoleBinding\",
-                  \"globalRoleId\": \"${{ steps.read_user.outputs.global_role }}\",
-                  \"userId\": \"${{ steps.create_user.outputs.user_id }}\"
-                }" \
-            $RANCHER_URL/v3/globalrolebindings
-
-      - name: Create Project Role Binding (Optional)
-        if: ${{ steps.read_user.outputs.project_id != null }}
-        run: |
-          curl -s -k -X POST \
-            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{
-                  \"type\": \"projectRoleTemplateBinding\",
-                  \"roleTemplateId\": \"${{ steps.read_user.outputs.project_role }}\",
-                  \"userId\": \"${{ steps.create_user.outputs.user_id }}\",
-                  \"projectId\": \"${{ steps.read_user.outputs.project_id }}\"
-                }" \
-            $RANCHER_URL/v3/projectroletemplatebindings
+            -H 'Content-Type: application/json' \
+            -d '{
+                  "username": "${{ steps.read_user.outputs.username }}",
+                  "name": "${{ steps.read_user.outputs.name }}",
+                  "password": "${{ steps.read_user.outputs.password }}",
+                  "enabled": ${{ steps.read_user.outputs.enabled }} 
+                }' \
+            $RANCHER_URL/v3/users
 
