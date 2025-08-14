@@ -46,7 +46,7 @@ jobs:
         id: create_user
         run: |
           curl -s -k -X POST \
-            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
+            -H "Authorization: Bearer '$RANCHER_API_TOKEN'" \
             -H 'Content-Type: application/json' \
             -d '{
                   "username": "${{ steps.read_user.outputs.username }}",
@@ -54,5 +54,5 @@ jobs:
                   "password": "${{ steps.read_user.outputs.password }}",
                   "enabled": ${{ steps.read_user.outputs.enabled }} 
                 }' \
-            $RANCHER_URL/v3/users
+            "$RANCHER_URL/v3/users"
 
