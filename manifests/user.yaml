@@ -2,10 +2,10 @@ apiVersion: management.cattle.io/v3
 metadata:
   generateName: u-
 description: ''
-displayName: gha-user-1
+displayName: gha-user-2
 enabled: true
 kind: User
 password: $2b$12$VKdnirk/F/7aTU9cNZhPdOpbgmgINkSA.yE4Z5iESrMXVp0pl77kC
 spec:
-  username: gha-user-1
+  username: gha-user-2
 
