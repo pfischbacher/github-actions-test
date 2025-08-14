@@ -11,17 +11,55 @@ jobs:
       # Rancher API settings
       RANCHER_URL: "http://rancher.13.208.242.148.sslip.io"
       RANCHER_API_TOKEN: ${{ secrets.RANCHER_API_TOKEN }} # Token for user with Manage Users global role
+      PROJECT_ID: "c-m-fjhb4rlh:p-bxnds" # Replace with your cluster:project ID
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
-        id: install
-        with:
-          version: 'v1.31.9'
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Apply Rancher user manifests
+      - name: Create Rancher User
+        id: create_user
         run: |
-          kubectl create -f manifests/user.yaml
+          response=$(curl -s -k -X POST \
+            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "username": "gha-user-1",
+                  "name": "gha-user-1",
+                  "password": "StrongPassword123!",
+                  "enabled": true
+                }' \
+            $RANCHER_URL/v3/users)
+
+          echo "$response"
+          user_id=$(echo "$response" | jq -r '.id')
+          echo "user_id=$user_id" >> $GITHUB_OUTPUT
+
+      - name: Create Global Role Binding
+        run: |
+          curl -s -k -X POST \
+            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+                  \"type\": \"globalRoleBinding\",
+                  \"globalRoleId\": \"user\",
+                  \"userId\": \"${{ steps.create_user.outputs.user_id }}\"
+                }" \
+            $RANCHER_URL/v3/globalrolebindings
+
+      - name: Optional: Create Project Role Binding
+        run: |
+          curl -s -k -X POST \
+            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+                  \"type\": \"projectRoleTemplateBinding\",
+                  \"roleTemplateId\": \"project-member\",
+                  \"userId\": \"${{ steps.create_user.outputs.user_id }}\",
+                  \"projectId\": \"$PROJECT_ID\"
+                }" \
+            $RANCHER_URL/v3/projectroletemplatebindings
+
