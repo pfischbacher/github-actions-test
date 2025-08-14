@@ -24,4 +24,4 @@ jobs:
 
       - name: Apply Rancher user manifests
         run: |
-          kubectl apply -f manifests/user.yaml
+          kubectl create -f manifests/user.yaml
