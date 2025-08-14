@@ -9,7 +9,7 @@ jobs:
     runs-on: self-hosted
     env:
       # Rancher API settings
-      RANCHER_URL: "https://rancher.13.208.242.148.sslip.io"
+      RANCHER_URL: ${{ secrets.RANCHER_URL }} 
       RANCHER_API_TOKEN: ${{ secrets.RANCHER_API_TOKEN }} # Token for user with Manage Users global role
 
     steps:
@@ -29,9 +29,6 @@ jobs:
             -H "Authorization: Bearer ${RANCHER_API_TOKEN}" \
             -H "Accept: application/json" \
             "${RANCHER_URL}/v3" | jq '.links | keys'
-      env:
-        RANCHER_URL: ${{ secrets.RANCHER_URL }}
-        RANCHER_API_TOKEN: ${{ secrets.RANCHER_API_TOKEN }}
 
       - name: Read user.yaml
         id: read_user
