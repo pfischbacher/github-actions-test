@@ -50,7 +50,7 @@ jobs:
                 }" \
             $RANCHER_URL/v3/globalrolebindings
 
-      - name: Optional: Create Project Role Binding
+      - name: Create Project Role Binding
         run: |
           curl -s -k -X POST \
             -H "Authorization: Bearer $RANCHER_API_TOKEN" \
