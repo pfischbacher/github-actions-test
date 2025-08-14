@@ -22,20 +22,6 @@ jobs:
           sudo wget https://github.com/mikefarah/yq/releases/download/v4.47.1/yq_linux_amd64 -O /usr/local/bin/yq
           sudo chmod +x /usr/local/bin/yq
 
-      - name: Verify Rancher Token
-        run: |
-          echo "Checking Rancher API authentication..."
-          echo "Token length: ${#RANCHER_API_TOKEN}"
-          curl -s -k -v \
-            -H "Authorization: Bearer ${RANCHER_API_TOKEN}" \
-            -H "Accept: application/json" \
-            "${RANCHER_URL}/v3" | jq '.links | keys'
-
-      - name: Print token in base64
-        run: |
-          echo "Token (base64):"
-          echo -n "${RANCHER_API_TOKEN}" | base64
-
       - name: Read user.yaml
         id: read_user
         run: |
@@ -55,29 +41,10 @@ jobs:
           echo "project_role=$PROJECT_ROLE" >> $GITHUB_OUTPUT
           echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
 
-      - name: Debug Curl User
-        id: debug_curl_user
-        run: |
-          echo "=== Testing connectivity to Rancher ==="
-          curl -k -I "$RANCHER_URL" || echo "❌ Cannot reach Rancher URL"
-
-          # Check token works with /v3/users
-          echo "=== Testing API token ==="
-          curl -k -s -o /tmp/api_test.txt -w "%{http_code}\n" \
-            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
-            "$RANCHER_URL/v3/users"
-
-          echo "=== API response preview ==="
-          head -n 20 /tmp/api_test.txt
-
       - name: Create Rancher User
         id: create_user
         run: |
-          echo "Username = ${{ steps.read_user.outputs.username }}"
-          echo "Name = ${{ steps.read_user.outputs.name }}"
-          echo "Rancher API token = $RANCHER_API_TOKEN"
-          echo "Rancher URL = $RANCHER_URL"
-          curl -s -k -X POST \
+          response=$(curl -s -k -X POST \
             -H "Authorization: Bearer $RANCHER_API_TOKEN" \
             -H 'Content-Type: application/json' \
             -d '{
@@ -86,4 +53,35 @@ jobs:
                   "password": "${{ steps.read_user.outputs.password }}",
                   "enabled": ${{ steps.read_user.outputs.enabled }} 
                 }' \
-            $RANCHER_URL/v3/users
+            $RANCHER_URL/v3/users)
+
+          echo "$response"
+          user_id=$(echo "$response" | jq -r '.id') >> $GITHUB_OUTPUT
+          echo "user_id=$user_id"
+
+      - name: Create Global Role Binding
+        run: |
+          curl -s -k -X POST \
+            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+                  \"type\": \"globalRoleBinding\",
+                  \"globalRoleId\": \"${{ steps.read_user.outputs.global_role }}\",
+                  \"userId\": \"${{ steps.create_user.outputs.user_id }}\"
+                }" \
+            $RANCHER_URL/v3/globalrolebindings
+
+      - name: Create Project Role Binding (Optional)
+        if: ${{ steps.read_user.outputs.project_id != null }}
+        run: |
+          curl -s -k -X POST \
+            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+                  \"type\": \"projectRoleTemplateBinding\",
+                  \"roleTemplateId\": \"${{ steps.read_user.outputs.project_role }}\",
+                  \"userId\": \"${{ steps.create_user.outputs.user_id }}\",
+                  \"projectId\": \"${{ steps.read_user.outputs.project_id }}\"
+                }" \
+            $RANCHER_URL/v3/projectroletemplatebindings
+
