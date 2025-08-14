@@ -17,9 +17,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up kubectl
-        run: |
-          # Since we are inside the cluster, we can use the in-cluster kubeconfig
-          echo "Using in-cluster kubeconfig from ServiceAccount"
+        uses: azure/setup-kubectl@v3
+        with:
+          version: '1.31.9'
 
       - name: Apply Rancher user manifests
         run: |
