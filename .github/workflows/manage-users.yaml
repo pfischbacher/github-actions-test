@@ -11,14 +11,35 @@ jobs:
       # Rancher API settings
       RANCHER_URL: "http://rancher.13.208.242.148.sslip.io"
       RANCHER_API_TOKEN: ${{ secrets.RANCHER_API_TOKEN }} # Token for user with Manage Users global role
-      PROJECT_ID: "c-m-fjhb4rlh:p-bxnds" # Replace with your cluster:project ID
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Install yq and jq
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          sudo wget https://github.com/mikefarah/yq/releases/download/v4.38.1/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+
+      - name: Read user.yaml
+        id: read_user
+        run: |
+          USERNAME=$(yq e '.username' manifests/user.yaml)
+          NAME=$(yq e '.name' manifests/user.yaml)
+          PASSWORD=$(yq e '.password' manifests/user.yaml)
+          ENABLED=$(yq e '.enabled' manifests/user.yaml)
+          GLOBAL_ROLE=$(yq e '.globalRole' manifests/user.yaml)
+          PROJECT_ROLE=$(yq e '.projectRole' manifests/user.yaml)
+          PROJECT_ID=$(yq e '.projectId' manifests/user.yaml)
+
+          echo "username=$USERNAME" >> $GITHUB_OUTPUT
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "password=$PASSWORD" >> $GITHUB_OUTPUT
+          echo "enabled=$ENABLED" >> $GITHUB_OUTPUT
+          echo "global_role=$GLOBAL_ROLE" >> $GITHUB_OUTPUT
+          echo "project_role=$PROJECT_ROLE" >> $GITHUB_OUTPUT
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
 
       - name: Create Rancher User
         id: create_user
@@ -26,12 +47,12 @@ jobs:
           response=$(curl -s -k -X POST \
             -H "Authorization: Bearer $RANCHER_API_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{
-                  "username": "gha-user-1",
-                  "name": "gha-user-1",
-                  "password": "StrongPassword123!",
-                  "enabled": true
-                }' \
+            -d "{
+                  \"username\": \"${{ steps.read_user.outputs.username }}\",
+                  \"name\": \"${{ steps.read_user.outputs.name }}\",
+                  \"password\": \"${{ steps.read_user.outputs.password }}\",
+                  \"enabled\": ${{ steps.read_user.outputs.enabled }}
+                }" \
             $RANCHER_URL/v3/users)
 
           echo "$response"
@@ -45,21 +66,22 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{
                   \"type\": \"globalRoleBinding\",
-                  \"globalRoleId\": \"user\",
+                  \"globalRoleId\": \"${{ steps.read_user.outputs.global_role }}\",
                   \"userId\": \"${{ steps.create_user.outputs.user_id }}\"
                 }" \
             $RANCHER_URL/v3/globalrolebindings
 
-      - name: Create Project Role Binding
+      - name: Create Project Role Binding (Optional)
+        if: ${{ steps.read_user.outputs.project_id != "null" }}
         run: |
           curl -s -k -X POST \
             -H "Authorization: Bearer $RANCHER_API_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{
                   \"type\": \"projectRoleTemplateBinding\",
-                  \"roleTemplateId\": \"project-member\",
+                  \"roleTemplateId\": \"${{ steps.read_user.outputs.project_role }}\",
                   \"userId\": \"${{ steps.create_user.outputs.user_id }}\",
-                  \"projectId\": \"$PROJECT_ID\"
+                  \"projectId\": \"${{ steps.read_user.outputs.project_id }}\"
                 }" \
             $RANCHER_URL/v3/projectroletemplatebindings
 

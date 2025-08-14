@@ -1,11 +1,7 @@
-apiVersion: management.cattle.io/v3
-metadata:
-  generateName: u-
-description: ''
-displayName: gha-user-1
+username: 'gha-user-1'
+name: 'GHA User 1'
+password: 'StrongPassword123!'
 enabled: true
-kind: User
-password: $2b$12$VKdnirk/F/7aTU9cNZhPdOpbgmgINkSA.yE4Z5iESrMXVp0pl77kC
-spec:
-  username: gha-user-1
-
+globalRole: user
+projectRole: 'project-member'
+projectId: 'c-m-fjhb4rlh:p-bxnds'
