@@ -31,6 +31,11 @@ jobs:
             -H "Accept: application/json" \
             "${RANCHER_URL}/v3" | jq '.links | keys'
 
+    - name: Print token in base64
+      run: |
+        echo "Token (base64):"
+        echo -n "${RANCHER_API_TOKEN}" | base64
+
       - name: Read user.yaml
         id: read_user
         run: |
