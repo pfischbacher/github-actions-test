@@ -9,7 +9,7 @@ jobs:
     runs-on: self-hosted
     env:
       # Rancher API settings
-      RANCHER_URL: "http://rancher.13.208.242.148.sslip.io"
+      RANCHER_URL: "https://rancher.13.208.242.148.sslip.io"
       RANCHER_API_TOKEN: ${{ secrets.RANCHER_API_TOKEN }} # Token for user with Manage Users global role
 
     steps:
