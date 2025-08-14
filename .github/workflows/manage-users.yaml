@@ -72,7 +72,7 @@ jobs:
             $RANCHER_URL/v3/globalrolebindings
 
       - name: Create Project Role Binding (Optional)
-        if: ${{ steps.read_user.outputs.project_id != "null" }}
+        if: ${{ steps.read_user.outputs.project_id != null }}
         run: |
           curl -s -k -X POST \
             -H "Authorization: Bearer $RANCHER_API_TOKEN" \
