@@ -41,13 +41,30 @@ jobs:
           echo "project_role=$PROJECT_ROLE" >> $GITHUB_OUTPUT
           echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
 
+      - name: Debug Curl User
+        id: debug_curl_user
+        run: |
+          echo "=== Testing connectivity to Rancher ==="
+          curl -k -I "$RANCHER_URL" || echo "❌ Cannot reach Rancher URL"
+
+          # Check token works with /v3/users
+          echo "=== Testing API token ==="
+          curl -k -s -o /tmp/api_test.txt -w "%{http_code}\n" \
+            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
+            "$RANCHER_URL/v3/users"
+
+          echo "=== API response preview ==="
+          head -n 20 /tmp/api_test.txt
+
       - name: Create Rancher User
         id: create_user
         run: |
           echo "Username = ${{ steps.read_user.outputs.username }}"
           echo "Name = ${{ steps.read_user.outputs.name }}"
+          echo "Rancher API token = $RANCHER_API_TOKEN"
+          echo "Rancher URL = $RANCHER_URL"
           curl -s -k -X POST \
-            -H "Authorization: Bearer '$RANCHER_API_TOKEN'" \
+            -H "Authorization: Bearer $RANCHER_API_TOKEN" \
             -H 'Content-Type: application/json' \
             -d '{
                   "username": "${{ steps.read_user.outputs.username }}",
